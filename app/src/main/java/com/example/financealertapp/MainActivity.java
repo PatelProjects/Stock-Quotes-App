@@ -1,13 +1,23 @@
 package com.example.financealertapp;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -89,6 +99,51 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
+
+
+        class ExampleAdapter extends RecyclerView.Adapter<ExampleAdapter.ExampleViewHolder> {
+
+            private ArrayList<example_item> mExampleList;
+
+            class ExampleViewHolder extends RecyclerView.ViewHolder{
+                public ImageView mImageView;
+                public TextView mTextView1;
+                public TextView mTextView2;
+
+                public ExampleViewHolder(@NonNull View itemView) {
+                    super(itemView);
+                    mImageView = itemView.findViewById(R.id.imageView);
+                    mTextView1 = itemView.findViewById(R.id.textView);
+                    mTextView2 = itemView.findViewById(R.id.textView2);
+                }
+            }
+
+            ExampleAdapter(ArrayList<example_item> exampleList){
+                this.mExampleList = exampleList;
+            }
+
+            @NonNull
+            @Override
+            public ExampleAdapter.ExampleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.example_item, parent, false);
+                ExampleAdapter.ExampleViewHolder evh = new ExampleAdapter.ExampleViewHolder(v);
+                return evh;
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull ExampleAdapter.ExampleViewHolder holder, int position) {
+                example_item currentItem = mExampleList.get(position);
+                holder.mImageView.setImageResource(currentItem.getmImageResource());
+                holder.mTextView1.setText(currentItem.getmText1());
+                holder.mTextView2.setText(currentItem.getmText2());
+            }
+
+            @Override
+            public int getItemCount() {
+                return mExampleList.size();
+            }
+        }
+
         mAdapter = new ExampleAdapter(exampleList);
 
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -96,6 +151,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.example_menu, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.item1:
+                Toast.makeText(this, "Item 1 selected", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
 
+    }
 }
