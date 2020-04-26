@@ -13,27 +13,41 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:text="TD"
             android:textColor="@android:color/black"
+
+            android:text="TD"
             android:textSize="20sp"
             android:textStyle="bold" />
-
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:padding="8dp"
-            android:layout_toRightOf="@id/textView"/>
 
         <TextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:text="Line 2"
-            android:textSize="15sp"
-            android:layout_toRightOf="@id/imageView"/>
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/textView"
+
+            android:text="12.34"
+            android:paddingLeft="10sp"/>
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toRightOf="@id/textView2"/>
+
+        <TextView
+            android:id="@+id/changeNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/imageView"
+
+            android:text="1.23"
+            />
+
+
+
+
 
     </RelativeLayout>
 

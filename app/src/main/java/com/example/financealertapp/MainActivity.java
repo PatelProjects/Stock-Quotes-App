@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,6 +20,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 
@@ -67,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void insertItem(int position){
-        exampleList.add(position, new example_item(R.drawable.ic_android, "New", "New"));
+        exampleList.add(position, new example_item(R.drawable.ic_android, "New", "New", "8", "5"));
         mAdapter.notifyItemInserted(position);
     }
 
@@ -78,20 +90,87 @@ public class MainActivity extends AppCompatActivity {
 
     public void createExampleList(){
         exampleList = new ArrayList<>();
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
-        exampleList.add(new example_item(R.drawable.ic_android, "Line 1", "Line 2"));
+
+        new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=BNS.TO&apikey=TTFCPV9C687UNHKO");
+
+    }
+
+
+    public  class makeInitialList extends AsyncTask<String, String, String>{
+
+        @Override
+        protected String doInBackground(String... urls) {
+            HttpURLConnection connection = null;
+            BufferedReader reader = null;
+
+            try{
+                URL url = new URL(urls[0]);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                InputStream stream = connection.getInputStream();
+
+                reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+
+                String line = "";
+
+                while ((line = reader.readLine()) != null){
+                    buffer.append(line);
+                }
+
+                String finalJson = buffer.toString();
+
+                return finalJson;
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null){
+                    connection.disconnect();
+                }
+
+                try {
+                    if (reader != null){
+                        reader.close();
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            try {
+
+                JSONObject parentObject = new JSONObject(s);
+
+                JSONObject finalOject = parentObject.getJSONObject("Global Quote");
+
+                String symbol = finalOject.getString("01. symbol");
+                String price = finalOject.getString("05. price");
+                String changeNumber = finalOject.getString("09. change");
+                String changePercentage = finalOject.getString("10. change percent");
+
+                exampleList.add(new example_item(R.drawable.ic_uparrow, symbol, price, changeNumber, changePercentage));
+                mAdapter.notifyItemInserted(exampleList.size());
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+
+        }
     }
 
 
@@ -109,12 +188,16 @@ public class MainActivity extends AppCompatActivity {
                 public ImageView mImageView;
                 public TextView mTextView1;
                 public TextView mTextView2;
+                public TextView change;
+
 
                 public ExampleViewHolder(@NonNull View itemView) {
                     super(itemView);
                     mImageView = itemView.findViewById(R.id.imageView);
                     mTextView1 = itemView.findViewById(R.id.textView);
                     mTextView2 = itemView.findViewById(R.id.textView2);
+                    change = itemView.findViewById(R.id.changeNumber);
+
                 }
             }
 
@@ -136,6 +219,7 @@ public class MainActivity extends AppCompatActivity {
                 holder.mImageView.setImageResource(currentItem.getmImageResource());
                 holder.mTextView1.setText(currentItem.getmText1());
                 holder.mTextView2.setText(currentItem.getmText2());
+                holder.change.setText(currentItem.getchangeNumber() + "(" + currentItem.getChangePercentage() + ")");
             }
 
             @Override
