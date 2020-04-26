@@ -31,9 +31,13 @@
 
         <ImageView
             android:id="@+id/imageView"
-            android:layout_width="50dp"
+            android:layout_width="30dp"
             android:layout_height="50dp"
-            android:layout_toRightOf="@id/textView2"/>
+            android:layout_toRightOf="@id/textView2"
+
+            android:paddingTop="15sp"
+            android:paddingBottom="15sp"
+            />
 
         <TextView
             android:id="@+id/changeNumber"

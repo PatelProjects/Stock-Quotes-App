@@ -161,7 +161,16 @@ public class MainActivity extends AppCompatActivity {
                 String changeNumber = finalOject.getString("09. change");
                 String changePercentage = finalOject.getString("10. change percent");
 
-                exampleList.add(new example_item(R.drawable.ic_uparrow, symbol, price, changeNumber, changePercentage));
+                int image = 0;
+
+                if (Double.parseDouble(changeNumber) > 0){
+                    image = R.drawable.ic_up_arrow;
+                }
+                else if (Double.parseDouble(changeNumber) < 0){
+                    image = R.drawable.ic_down_arrow;
+                }
+
+                exampleList.add(new example_item(image, symbol, price, changeNumber, changePercentage));
                 mAdapter.notifyItemInserted(exampleList.size());
 
             } catch (JSONException e) {
