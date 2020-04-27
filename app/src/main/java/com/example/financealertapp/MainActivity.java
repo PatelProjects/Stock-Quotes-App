@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ArrayList<String> stocksString;
     private ArrayList<example_item> exampleList;
 
     private RecyclerView mRecyclerView;
@@ -89,9 +91,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void createExampleList(){
+
+        stocksString = new ArrayList<>();
+        stocksString.add("BNS.TO");
+        stocksString.add("TD.TO");
+
         exampleList = new ArrayList<>();
 
-        new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=BNS.TO&apikey=TTFCPV9C687UNHKO");
+        for (String stockName: stocksString) {
+            new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stockName + "&apikey=TTFCPV9C687UNHKO");
+        }
+
 
     }
 
@@ -255,7 +265,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.item1:
-                Toast.makeText(this, "Item 1 selected", Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(this, search.class);
+                startActivity(intent);
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
