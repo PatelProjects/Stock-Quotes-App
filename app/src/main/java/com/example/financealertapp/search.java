@@ -3,12 +3,19 @@ package com.example.financealertapp;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,11 +29,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 public class search extends AppCompatActivity {
 
-    ArrayAdapter<String> arrayAdapter;
+    CustomAdapter arrayAdapter;
     ArrayList<String> mylist;
+    public static String result;
 
 
     @Override
@@ -45,7 +54,9 @@ public class search extends AppCompatActivity {
         mylist.add("Copy");
         mylist.add("Ruler");
 
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mylist);
+//        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mylist);
+
+        arrayAdapter = new CustomAdapter(mylist,this);
 
         listView.setAdapter(arrayAdapter);
 
@@ -68,7 +79,9 @@ public class search extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
 
-                new searchAPICall().execute("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + newText + "&apikey=TTFCPV9C687UNHKO");
+                if(newText != ""){
+                    new searchAPICall().execute("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + newText + "&apikey=TTFCPV9C687UNHKO");
+                }
 
                 return false;
             }
@@ -77,6 +90,58 @@ public class search extends AppCompatActivity {
 
         return super.onCreateOptionsMenu(menu);
     }
+
+
+    public class CustomAdapter extends BaseAdapter{
+
+        private List<String> listOf;
+        private Context context;
+
+        public CustomAdapter(List<String> listOf, Context context) {
+            this.listOf = listOf;
+            this.context = context;
+        }
+
+        @Override
+        public int getCount() {
+            return listOf.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View view = getLayoutInflater().inflate(R.layout.activity_search_item, null);
+
+            TextView itemText = view.findViewById(R.id.SearchItem);
+
+            itemText.setText(listOf.get(position));
+
+            view.setOnClickListener(new View.OnClickListener(){
+
+                @Override
+                public void onClick(View v) {
+
+                    Intent intent = new Intent();
+                    result = listOf.get(position).substring(0, listOf.get(position).indexOf(':'));
+                    intent.putExtra("option", result);
+                    setResult(Activity.RESULT_OK, intent);
+                    finish();
+                }
+            });
+
+            return view;
+        }
+    }
+
 
     public class searchAPICall extends AsyncTask<String, String, String> {
 

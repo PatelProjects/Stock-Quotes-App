@@ -5,23 +5,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,6 +32,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+
+import static com.example.financealertapp.search.result;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -48,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonRemove;
     private EditText editTextInsert;
     private EditText editTextRemove;
+
+    private example_item tempExampleItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
            @Override
            public void onClick(View v) {
                int position = Integer.parseInt(editTextInsert.getText().toString());
-               insertItem(position);
+//               insertItem(position);
            }
        });
 
@@ -80,8 +83,25 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void insertItem(int position){
-        exampleList.add(position, new example_item(R.drawable.ic_android, "New", "New", "8", "5"));
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case (1) : {
+                if (resultCode == Activity.RESULT_OK) {
+                    String newText = data.getStringExtra("option");
+                    Log.d("res", newText);
+                    new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol="
+                            + newText + "&apikey=TTFCPV9C687UNHKO", "insert");
+
+                }
+                break;
+            }
+        }
+    }
+
+    public void insertItem(int position, example_item example_item){
+        exampleList.add(position, example_item);
         mAdapter.notifyItemInserted(position);
     }
 
@@ -90,31 +110,42 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.notifyItemRemoved(position);
     }
 
+    public void update(int position){
+        new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol="
+                + exampleList.get(position).getmText1() + "&apikey=TTFCPV9C687UNHKO", "update", Integer.toString(position));
+
+    }
+
     public void createExampleList(){
 
         stocksString = new ArrayList<>();
         stocksString.add("BNS.TO");
-        stocksString.add("TD.TO");
+//        stocksString.add("TD.TO");
 
         exampleList = new ArrayList<>();
 
         for (String stockName: stocksString) {
-            new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stockName + "&apikey=TTFCPV9C687UNHKO");
+            new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stockName + "&apikey=TTFCPV9C687UNHKO", "insert");
         }
-
-
     }
 
 
-    public  class makeInitialList extends AsyncTask<String, String, String>{
+    public  class makeInitialList extends AsyncTask<String, String, ArrayList<String>> {
 
         @Override
-        protected String doInBackground(String... urls) {
+        protected ArrayList<String> doInBackground(String... urls) {
             HttpURLConnection connection = null;
             BufferedReader reader = null;
 
             try{
                 URL url = new URL(urls[0]);
+                String type = urls[1];
+                String param = null;
+
+                if (urls.length >= 3){
+                    param = urls[2];
+                }
+
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
 
@@ -132,7 +163,12 @@ public class MainActivity extends AppCompatActivity {
 
                 String finalJson = buffer.toString();
 
-                return finalJson;
+                ArrayList<String> ret = new ArrayList<String>();
+                ret.add(finalJson);
+                ret.add(type);
+                ret.add(param);
+
+                return ret;
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -157,12 +193,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String s) {
+        protected void onPostExecute(ArrayList<String> s) {
             super.onPostExecute(s);
 
             try {
 
-                JSONObject parentObject = new JSONObject(s);
+                JSONObject parentObject = new JSONObject(s.get(0));
+                Log.d("resss", s.get(0));
 
                 JSONObject finalOject = parentObject.getJSONObject("Global Quote");
 
@@ -180,8 +217,21 @@ public class MainActivity extends AppCompatActivity {
                     image = R.drawable.ic_down_arrow;
                 }
 
-                exampleList.add(new example_item(image, symbol, price, changeNumber, changePercentage));
-                mAdapter.notifyItemInserted(exampleList.size());
+                tempExampleItem = new example_item(image, symbol, price, changeNumber, changePercentage);
+
+//                exampleList.add(new example_item(image, symbol, price, changeNumber, changePercentage));
+//                mAdapter.notifyItemInserted(exampleList.size());
+
+                Log.d("u", "hii");
+
+                if(s.get(1) == "insert"){
+                    insertItem(0, tempExampleItem);
+                }
+                else if(s.get(1) == "update"){
+                    exampleList.set(Integer.parseInt(s.get(2)), tempExampleItem);
+                    mAdapter.notifyItemChanged(Integer.parseInt(s.get(2)));
+                }
+
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -267,7 +317,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.item1:
 
                 Intent intent = new Intent(this, search.class);
-                startActivity(intent);
+                startActivityForResult(intent, 1);
+//                startActivity(intent);
 
                 return true;
             default:
