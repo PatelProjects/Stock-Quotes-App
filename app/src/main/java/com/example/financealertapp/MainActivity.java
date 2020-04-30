@@ -20,11 +20,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,35 +58,99 @@ public class MainActivity extends AppCompatActivity {
 
     private example_item tempExampleItem;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       createExampleList();
-       buildRecyclerView();
+        stocksString = new ArrayList<>();
 
-       buttonInsert = findViewById(R.id.button_insert);
-       buttonRemove = findViewById(R.id.button_remove);
-       editTextInsert = findViewById(R.id.edittext_insert);
-       editTextRemove = findViewById(R.id.edittext_remove);
+        try {
+            FileInputStream fis = null;
+            fis = openFileInput("alice.csv");
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader br = new BufferedReader(isr);
+            StringBuilder sb = new StringBuilder();
+            String text;
 
-       buttonInsert.setOnClickListener(new View.OnClickListener(){
-           @Override
-           public void onClick(View v) {
-               int position = Integer.parseInt(editTextInsert.getText().toString());
-//               insertItem(position);
-           }
-       });
-
-        buttonRemove.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                int position = Integer.parseInt(editTextRemove.getText().toString());
-                removeItem(position);
+            while ((text = br.readLine()) != null) {
+                sb.append(text).append("\n");
             }
-        });
 
+            Toast.makeText(this, sb.toString(), Toast.LENGTH_LONG).show();
+            
+            JSONArray jsonArray = new JSONArray(sb.toString());
+            for (int i = 0; i < jsonArray.length(); i++) {
+                stocksString.add((String) jsonArray.get(i));
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        createExampleList();
+        buildRecyclerView();
+
+        buttonInsert = findViewById(R.id.button_insert);
+        buttonRemove = findViewById(R.id.button_remove);
+        editTextInsert = findViewById(R.id.edittext_insert);
+        editTextRemove = findViewById(R.id.edittext_remove);
+
+        buttonInsert.setOnClickListener(new View.OnClickListener(){
+               @Override
+               public void onClick(View v) { 
+                   int position = Integer.parseInt(editTextInsert.getText().toString());
+    //              insertItem(position);
+               }
+           });
+    
+        buttonRemove.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    int position = Integer.parseInt(editTextRemove.getText().toString());
+                    removeItem(position);
+                }
+            });
+
+
+    }
+
+    @Override
+    protected void onStop() {
+
+
+        FileOutputStream fos = null;
+        
+        File internalStorageDir = getFilesDir();
+        File alice = new File(internalStorageDir, "alice.csv");
+
+
+        try {
+            fos = new FileOutputStream(alice, false);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try {
+
+            JSONArray jsArray = new JSONArray(stocksString);
+            fos.write(jsArray.toString().getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        super.onStop();
     }
 
     @Override
@@ -92,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
                     String newText = data.getStringExtra("option");
                     Log.d("res", newText);
                     new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol="
-                            + newText + "&apikey=TTFCPV9C687UNHKO", "insert");
+                            + newText + "&apikey=TTFCPV9C687UNHKO", "newinsert");
 
                 }
                 break;
@@ -118,9 +188,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void createExampleList(){
 
-        stocksString = new ArrayList<>();
-        stocksString.add("BNS.TO");
-//        stocksString.add("TD.TO");
+//        stocksString = new ArrayList<>();
+//        stocksString.add("BNS.TO");
+////        stocksString.add("TD.TO");
 
         exampleList = new ArrayList<>();
 
@@ -224,7 +294,11 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d("u", "hii");
 
-                if(s.get(1) == "insert"){
+                if(s.get(1) == "newinsert"){
+                    insertItem(0, tempExampleItem);
+                    stocksString.add(0, tempExampleItem.getmText1());
+                }
+                else if(s.get(1) == "insert"){
                     insertItem(0, tempExampleItem);
                 }
                 else if(s.get(1) == "update"){
