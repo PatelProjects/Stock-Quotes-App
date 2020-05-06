@@ -2,6 +2,7 @@ package com.example.financealertapp;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,6 +39,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Stack;
 
 import static com.example.financealertapp.search.result;
 
@@ -58,6 +60,9 @@ public class MainActivity extends AppCompatActivity {
 
     private example_item tempExampleItem;
 
+    private Stack<String> APIs;
+    private String currentAPI;
+
 
 
     @Override
@@ -66,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         stocksString = new ArrayList<>();
+        APIs = new Stack<>();
+
+        populateAPIs();
 
         try {
             FileInputStream fis = null;
@@ -120,15 +128,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void populateAPIs() {
+        APIs.push("TTFCPV9C687UNHKO");
+    }
+
+    private void changeAPI(){
+        APIs.push(APIs.pop());
+    }
+
     @Override
     protected void onStop() {
-
 
         FileOutputStream fos = null;
         
         File internalStorageDir = getFilesDir();
         File alice = new File(internalStorageDir, "alice.csv");
 
+        stocksString.clear();
+
+        for (int i = 0; i < exampleList.size(); i += 1){
+            stocksString.add(i, exampleList.get(i).getmText1());
+        }
 
         try {
             fos = new FileOutputStream(alice, false);
@@ -162,13 +182,15 @@ public class MainActivity extends AppCompatActivity {
                     String newText = data.getStringExtra("option");
                     Log.d("res", newText);
                     new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol="
-                            + newText + "&apikey=TTFCPV9C687UNHKO", "newinsert");
+                            + newText + "&apikey=" + APIs.peek(), "newinsert");
 
                 }
                 break;
             }
         }
     }
+
+
 
     public void insertItem(int position, example_item example_item){
         exampleList.add(position, example_item);
@@ -177,28 +199,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void removeItem(int position){
         exampleList.remove(position);
+
         mAdapter.notifyItemRemoved(position);
     }
 
-    public void update(int position){
-        new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol="
-                + exampleList.get(position).getmText1() + "&apikey=TTFCPV9C687UNHKO", "update", Integer.toString(position));
-
-    }
-
     public void createExampleList(){
-
-//        stocksString = new ArrayList<>();
-//        stocksString.add("BNS.TO");
-////        stocksString.add("TD.TO");
-
         exampleList = new ArrayList<>();
 
         for (String stockName: stocksString) {
-            new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stockName + "&apikey=TTFCPV9C687UNHKO", "insert");
+            new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + stockName + "&apikey=" + APIs.peek(), "insert");
         }
     }
-
 
     public  class makeInitialList extends AsyncTask<String, String, ArrayList<String>> {
 
@@ -289,14 +300,9 @@ public class MainActivity extends AppCompatActivity {
 
                 tempExampleItem = new example_item(image, symbol, price, changeNumber, changePercentage);
 
-//                exampleList.add(new example_item(image, symbol, price, changeNumber, changePercentage));
-//                mAdapter.notifyItemInserted(exampleList.size());
-
-                Log.d("u", "hii");
-
                 if(s.get(1) == "newinsert"){
                     insertItem(0, tempExampleItem);
-                    stocksString.add(0, tempExampleItem.getmText1());
+//                    stocksString.add(0, tempExampleItem.getmText1());
                 }
                 else if(s.get(1) == "insert"){
                     insertItem(0, tempExampleItem);
@@ -305,7 +311,6 @@ public class MainActivity extends AppCompatActivity {
                     exampleList.set(Integer.parseInt(s.get(2)), tempExampleItem);
                     mAdapter.notifyItemChanged(Integer.parseInt(s.get(2)));
                 }
-
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -375,6 +380,10 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
+
     }
 
 
@@ -388,11 +397,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
-            case R.id.item1:
+            case R.id.addNew:
 
                 Intent intent = new Intent(this, search.class);
                 startActivityForResult(intent, 1);
-//                startActivity(intent);
 
                 return true;
             default:
@@ -400,4 +408,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT){
+
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            return false;
+
+        }
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+
+            int position = viewHolder.getAdapterPosition();
+
+            switch (direction){
+                case (ItemTouchHelper.LEFT):
+                    removeItem(position);
+                    break;
+
+                case (ItemTouchHelper.RIGHT):
+                    break;
+            }
+        }
+    };
+
+
 }

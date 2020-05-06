@@ -49,6 +49,15 @@
             android:text="1.23"
             />
 
+        <ImageView
+            android:id="@+id/delete"
+            android:layout_width="30dp"
+            android:layout_height="50dp"
+            android:layout_alignParentRight="true"
+
+            android:paddingTop="15sp"
+            android:paddingBottom="15sp"
+            />
 
 
 
