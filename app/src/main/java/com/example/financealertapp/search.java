@@ -71,7 +71,7 @@ public class search extends AppCompatActivity {
             public boolean onQueryTextChange(String newText) {
 
                 if(newText != ""){
-                    new searchAPICall().execute("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + newText + "&apikey=TTFCPV9C687UNHKO");
+                    new searchAPICall().execute("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + newText + "&apikey=" + MainActivity.APIs.peek());
                 }
 
                 return false;

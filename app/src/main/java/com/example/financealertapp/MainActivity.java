@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -49,15 +50,15 @@ import static com.example.financealertapp.search.result;
 public class MainActivity extends AppCompatActivity {
 
     private ArrayList<String> stocksString;
-    private ArrayList<example_item> exampleList;
+    private ArrayList<stock_quote_container> exampleList;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private example_item tempExampleItem;
+    private stock_quote_container tempExampleItem;
 
-    private static Queue<String> APIs;
+    public static Queue<String> APIs;
     private static int APIcounter;
 
 
@@ -97,10 +98,8 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
         createExampleList();
         buildRecyclerView();
-
 
     }
 
@@ -119,8 +118,6 @@ public class MainActivity extends AppCompatActivity {
 
         APIcounter -= 1;
 
-
-
         if (APIcounter == 1){
             changeAPI();
         }
@@ -128,12 +125,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static void changeAPI(){
 
-        Log.d("LLLLLLLLL", APIs.peek());
+        Log.d("WVWVVWVWWVWVWWWWWWWW", APIs.peek());
 
         APIs.add(APIs.poll());
         APIcounter = 5;
 
-        Log.d("LLLLLLLLL", APIs.peek());
+        Log.d("WVWVVWVWWVWVWWWWWWWW", APIs.peek());
+
     }
 
     @Override
@@ -181,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == Activity.RESULT_OK) {
                     String newText = data.getStringExtra("option");
                     Log.d("res", newText);
+                    APIs.peek();
                     new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol="
                             + newText + "&apikey=" + APIs.peek(), "newinsert");
                 }
@@ -189,10 +188,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-    public void insertItem(int position, example_item example_item){
-        exampleList.add(position, example_item);
+    public void insertItem(int position, stock_quote_container stock_quote_container){
+        exampleList.add(position, stock_quote_container);
         mAdapter.notifyItemInserted(position);
     }
 
@@ -294,15 +291,18 @@ public class MainActivity extends AppCompatActivity {
                 String changePercentage = finalOject.getString("10. change percent");
 
                 int image = 0;
+                int changeColor = Color.GRAY;
 
                 if (Double.parseDouble(changeNumber) > 0){
                     image = R.drawable.ic_up_arrow;
+                    changeColor = Color.GREEN;
                 }
                 else if (Double.parseDouble(changeNumber) < 0){
                     image = R.drawable.ic_down_arrow;
+                    changeColor = Color.RED;
                 }
 
-                tempExampleItem = new example_item(image, symbol, price, changeNumber, changePercentage);
+                tempExampleItem = new stock_quote_container(image, symbol, price, changeNumber, changePercentage, changeColor);
 
                 if(s.get(1) == "newinsert"){
                     insertItem(0, tempExampleItem);
@@ -329,10 +329,9 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
 
-
         class ExampleAdapter extends RecyclerView.Adapter<ExampleAdapter.ExampleViewHolder> {
 
-            private ArrayList<example_item> mExampleList;
+            private ArrayList<stock_quote_container> mExampleList;
 
             class ExampleViewHolder extends RecyclerView.ViewHolder{
                 public ImageView mImageView;
@@ -340,36 +339,35 @@ public class MainActivity extends AppCompatActivity {
                 public TextView mTextView2;
                 public TextView change;
 
-
                 public ExampleViewHolder(@NonNull View itemView) {
                     super(itemView);
                     mImageView = itemView.findViewById(R.id.imageView);
                     mTextView1 = itemView.findViewById(R.id.textView);
                     mTextView2 = itemView.findViewById(R.id.textView2);
                     change = itemView.findViewById(R.id.changeNumber);
-
                 }
             }
 
-            ExampleAdapter(ArrayList<example_item> exampleList){
+            ExampleAdapter(ArrayList<stock_quote_container> exampleList){
                 this.mExampleList = exampleList;
             }
 
             @NonNull
             @Override
             public ExampleAdapter.ExampleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.example_item, parent, false);
+                View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.stock_quote_container, parent, false);
                 ExampleAdapter.ExampleViewHolder evh = new ExampleAdapter.ExampleViewHolder(v);
                 return evh;
             }
 
             @Override
             public void onBindViewHolder(@NonNull ExampleAdapter.ExampleViewHolder holder, int position) {
-                example_item currentItem = mExampleList.get(position);
+                stock_quote_container currentItem = mExampleList.get(position);
                 holder.mImageView.setImageResource(currentItem.getmImageResource());
                 holder.mTextView1.setText(currentItem.getmText1());
                 holder.mTextView2.setText(currentItem.getmText2());
-                holder.change.setText(currentItem.getchangeNumber() + "(" + currentItem.getChangePercentage() + ")");
+                holder.change.setText(currentItem.getchangeNumber() + " (" + currentItem.getChangePercentage() + ")");
+                holder.change.setTextColor(currentItem.getmChangeColour());
             }
 
             @Override
@@ -385,9 +383,7 @@ public class MainActivity extends AppCompatActivity {
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(mRecyclerView);
-
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -403,12 +399,11 @@ public class MainActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(this, search.class);
                 startActivityForResult(intent, 1);
-
                 return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
-
     }
 
     ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT){
@@ -416,7 +411,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
             return false;
-
         }
 
         @Override
@@ -434,6 +428,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
-
 }
