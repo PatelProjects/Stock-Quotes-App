@@ -39,6 +39,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Stack;
 
 import static com.example.financealertapp.search.result;
@@ -53,15 +55,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private Button buttonInsert;
-    private Button buttonRemove;
-    private EditText editTextInsert;
-    private EditText editTextRemove;
-
     private example_item tempExampleItem;
 
-    private Stack<String> APIs;
-    private String currentAPI;
+    private static Queue<String> APIs;
+    private static int APIcounter;
 
 
 
@@ -71,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         stocksString = new ArrayList<>();
-        APIs = new Stack<>();
+        APIs = new LinkedList<>();
 
         populateAPIs();
 
@@ -104,36 +101,39 @@ public class MainActivity extends AppCompatActivity {
         createExampleList();
         buildRecyclerView();
 
-        buttonInsert = findViewById(R.id.button_insert);
-        buttonRemove = findViewById(R.id.button_remove);
-        editTextInsert = findViewById(R.id.edittext_insert);
-        editTextRemove = findViewById(R.id.edittext_remove);
-
-        buttonInsert.setOnClickListener(new View.OnClickListener(){
-               @Override
-               public void onClick(View v) { 
-                   int position = Integer.parseInt(editTextInsert.getText().toString());
-    //              insertItem(position);
-               }
-           });
-    
-        buttonRemove.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    int position = Integer.parseInt(editTextRemove.getText().toString());
-                    removeItem(position);
-                }
-            });
-
 
     }
 
     private void populateAPIs() {
-        APIs.push("TTFCPV9C687UNHKO");
+        APIs.add("TTFCPV9C687UNHKO");
+        APIs.add("T4ZADFK2F3N7661O");
+        APIs.add("M2OBDY72H4K1P3C9");
+        APIs.add("C77RO63XNNI28VKU");
+
+        APIcounter = 5;
     }
 
-    private void changeAPI(){
-        APIs.push(APIs.pop());
+    public static void checkChangeAPI(){
+
+        Log.d("MMMMMMMM", Integer.toString(APIcounter));
+
+        APIcounter -= 1;
+
+
+
+        if (APIcounter == 1){
+            changeAPI();
+        }
+    }
+
+    private static void changeAPI(){
+
+        Log.d("LLLLLLLLL", APIs.peek());
+
+        APIs.add(APIs.poll());
+        APIcounter = 5;
+
+        Log.d("LLLLLLLLL", APIs.peek());
     }
 
     @Override
@@ -183,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("res", newText);
                     new makeInitialList().execute("https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol="
                             + newText + "&apikey=" + APIs.peek(), "newinsert");
-
                 }
                 break;
             }
@@ -215,6 +214,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected ArrayList<String> doInBackground(String... urls) {
+
+            Log.d("ZZZZZZZZZZZZZZZZZ", urls[0]);
+
+            checkChangeAPI();
+
             HttpURLConnection connection = null;
             BufferedReader reader = null;
 
@@ -315,8 +319,6 @@ public class MainActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-
 
         }
     }

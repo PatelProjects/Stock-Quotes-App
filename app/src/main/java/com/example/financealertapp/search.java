@@ -47,15 +47,6 @@ public class search extends AppCompatActivity {
 
         mylist = new ArrayList<>();
 
-        mylist.add("Eraser");
-        mylist.add("Books");
-        mylist.add("Pencil");
-        mylist.add("Pen");
-        mylist.add("Copy");
-        mylist.add("Ruler");
-
-//        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mylist);
-
         arrayAdapter = new CustomAdapter(mylist,this);
 
         listView.setAdapter(arrayAdapter);
@@ -151,6 +142,9 @@ public class search extends AppCompatActivity {
             BufferedReader reader = null;
 
             try {
+
+                MainActivity.checkChangeAPI();
+
                 URL url = new URL(urls[0]);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
